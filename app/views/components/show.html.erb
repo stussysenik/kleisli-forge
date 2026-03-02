@@ -1,0 +1,87 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Component Results</h1>
+      <p class="text-gray-500 text-sm mt-1"><%= @component_request.display_name %></p>
+    </div>
+    <%= link_to "Back", components_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <% if @pipeline_run %>
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900">Pipeline Status</h2>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+          <%= case @pipeline_run.status
+              when 'completed' then 'bg-green-100 text-green-800'
+              when 'running' then 'bg-blue-100 text-blue-800'
+              when 'failed' then 'bg-red-100 text-red-800'
+              else 'bg-gray-100 text-gray-800'
+              end %>">
+          <%= @pipeline_run.status.capitalize %>
+        </span>
+      </div>
+
+      <% if @pipeline_run.status == "running" %>
+        <p class="text-sm text-gray-500 mb-2">
+          <%= link_to "Watch live progress", pipeline_path(@pipeline_run), class: "text-green-600 hover:text-green-700 font-medium" %>
+        </p>
+      <% end %>
+
+      <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+        <div class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: <%= @pipeline_run.progress_percentage %>%"></div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @components.any? %>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <% @components.each do |component| %>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="px-6 py-4 bg-gray-50 border-b flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                <%= component.framework == 'vue' ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800' %>">
+                <%= component.framework.capitalize %>
+              </span>
+              <span class="text-sm font-medium text-gray-900"><%= component.filename %></span>
+            </div>
+            <% if component.quality_score %>
+              <span class="text-xs text-gray-500">
+                Score: <strong><%= component.quality_score.overall.round %>%</strong>
+                (<%= component.quality_score.grade %>)
+              </span>
+            <% end %>
+          </div>
+
+          <div class="p-4">
+            <pre class="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto text-xs leading-relaxed max-h-96"><code><%= component.source_code %></code></pre>
+          </div>
+
+          <% if component.quality_score %>
+            <div class="px-6 py-3 bg-gray-50 border-t">
+              <div class="grid grid-cols-4 gap-2 text-center">
+                <div>
+                  <div class="text-xs text-gray-500">A11y</div>
+                  <div class="text-sm font-semibold"><%= component.quality_score.accessibility.round %>%</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Perf</div>
+                  <div class="text-sm font-semibold"><%= component.quality_score.performance.round %>%</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Quality</div>
+                  <div class="text-sm font-semibold"><%= component.quality_score.code_quality.round %>%</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Fidelity</div>
+                  <div class="text-sm font-semibold"><%= component.quality_score.design_fidelity.round %>%</div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

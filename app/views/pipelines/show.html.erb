@@ -1,0 +1,93 @@
+<%= turbo_stream_from "pipeline_#{@pipeline_run.id}" %>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Pipeline Progress</h1>
+      <p class="text-gray-500 text-sm mt-1">
+        Request #<%= @pipeline_run.component_request_id %> &mdash;
+        <%= @pipeline_run.component_request.display_name %>
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <% if @pipeline_run.status == "running" %>
+        <div class="flex items-center gap-2 text-blue-600">
+          <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm font-medium">Running</span>
+        </div>
+      <% end %>
+      <%= link_to "View Results", component_path(@pipeline_run.component_request), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div id="pipeline_progress">
+    <%= render "pipelines/progress", pipeline_run: @pipeline_run %>
+  </div>
+
+  <!-- Stage List -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-4 bg-gray-50 border-b">
+      <h2 class="text-sm font-semibold text-gray-700">14-Stage Kleisli Pipeline</h2>
+    </div>
+    <div class="divide-y divide-gray-100">
+      <% @stages.each do |stage| %>
+        <div id="stage_<%= stage.id %>">
+          <%= render "pipeline_stages/stage", stage: stage %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Streaming Inference Output -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-4 bg-gray-50 border-b">
+      <h2 class="text-sm font-semibold text-gray-700">NIM Inference Stream</h2>
+    </div>
+    <div class="p-4">
+      <pre id="inference_stream" class="bg-gray-900 text-green-400 rounded-lg p-4 min-h-[100px] max-h-96 overflow-y-auto text-xs font-mono leading-relaxed">Waiting for inference stage...</pre>
+    </div>
+  </div>
+
+  <!-- Results (updated via Turbo Stream) -->
+  <div id="pipeline_results">
+    <% if @pipeline_run.status == "completed" %>
+      <%= render "pipelines/results", pipeline_run: @pipeline_run %>
+    <% elsif @pipeline_run.status == "failed" %>
+      <%= render "pipelines/error", pipeline_run: @pipeline_run, error: @pipeline_run.error_details %>
+    <% end %>
+  </div>
+</div>
+
+<% content_for :head do %>
+  <meta name="pipeline-events-url" content="<%= pipeline_events_path(@pipeline_run) %>">
+<% end %>
+
+<script type="module">
+  // SSE connection for real-time updates
+  const eventsUrl = document.querySelector('meta[name="pipeline-events-url"]')?.content;
+  if (eventsUrl) {
+    const eventSource = new EventSource(eventsUrl);
+
+    eventSource.addEventListener('progress', (e) => {
+      const data = JSON.parse(e.data);
+      const progressBar = document.querySelector('#pipeline_progress .bg-green-500');
+      if (progressBar) {
+        progressBar.style.width = data.progress + '%';
+      }
+    });
+
+    eventSource.addEventListener('pipeline_done', (e) => {
+      eventSource.close();
+      // Reload to show final results
+      window.location.reload();
+    });
+
+    eventSource.onerror = () => {
+      eventSource.close();
+    };
+  }
+</script>

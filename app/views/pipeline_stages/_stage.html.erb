@@ -1,0 +1,52 @@
+<div class="flex items-center px-6 py-3 gap-4">
+  <!-- Stage number -->
+  <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
+    <%= case stage.status
+        when 'completed' then 'bg-green-500 text-white'
+        when 'running' then 'bg-blue-500 text-white animate-pulse'
+        when 'failed' then 'bg-red-500 text-white'
+        when 'skipped' then 'bg-gray-300 text-gray-500'
+        else 'bg-gray-100 text-gray-400'
+        end %>">
+    <% if stage.status == 'completed' %>
+      <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+    <% elsif stage.status == 'failed' %>
+      <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+      </svg>
+    <% else %>
+      <%= stage.position %>
+    <% end %>
+  </div>
+
+  <!-- Stage info -->
+  <div class="flex-1 min-w-0">
+    <p class="text-sm font-medium text-gray-900 truncate"><%= stage.agent_name %></p>
+    <p class="text-xs text-gray-500"><%= stage.agent_type.demodulize %></p>
+  </div>
+
+  <!-- Progress -->
+  <div class="flex items-center gap-3">
+    <% if stage.status == 'running' %>
+      <div class="w-24 bg-gray-200 rounded-full h-1.5">
+        <div class="bg-blue-500 h-1.5 rounded-full transition-all" style="width: <%= stage.progress_pct %>%"></div>
+      </div>
+    <% end %>
+
+    <% if stage.duration_seconds %>
+      <span class="text-xs text-gray-400 tabular-nums"><%= "%.1f" % stage.duration_seconds %>s</span>
+    <% end %>
+
+    <span class="text-xs font-medium w-16 text-right
+      <%= case stage.status
+          when 'completed' then 'text-green-600'
+          when 'running' then 'text-blue-600'
+          when 'failed' then 'text-red-600'
+          else 'text-gray-400'
+          end %>">
+      <%= stage.status.capitalize %>
+    </span>
+  </div>
+</div>

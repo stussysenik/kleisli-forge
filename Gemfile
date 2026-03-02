@@ -59,6 +59,9 @@ gem "devise", "~> 4.9"
 # JSON API serialization
 gem "jsonapi-serializer", "~> 2.2"
 
+# Lua scripting engine for component interactivity
+gem "rufus-lua", "~> 1.1", require: false
+
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "bundler-audit", require: false
