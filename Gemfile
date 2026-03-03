@@ -83,5 +83,5 @@ group :test do
   gem "selenium-webdriver"
   gem "webmock", "~> 3.23"
   gem "vcr", "~> 6.3"
-  gem "shoulda-matchers", "~> 6.2"
+  gem "shoulda-matchers", "~> 7.0"
 end
