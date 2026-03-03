@@ -54,7 +54,7 @@ gem "faraday", "~> 2.9"
 gem "faraday-retry", "~> 2.2"
 
 # Authentication
-gem "devise", "~> 4.9"
+gem "devise", "~> 5.0"
 
 # JSON API serialization
 gem "jsonapi-serializer", "~> 2.2"
