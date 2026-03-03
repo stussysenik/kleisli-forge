@@ -43,7 +43,7 @@ gem "image_processing", "~> 1.2"
 # Category Theory / Functional Programming
 gem "dry-monads", "~> 1.6"
 gem "dry-types", "~> 1.7"
-gem "dry-struct", "~> 1.6"
+gem "dry-struct", "~> 1.8"
 gem "dry-transformer", "~> 1.0"
 
 # State Machine with audit trail
