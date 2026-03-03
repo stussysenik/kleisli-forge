@@ -1,4 +1,5 @@
-<div class="space-y-6">
+<div class="space-y-6" data-turbo-cache="false">
+  <%# Header %>
   <div class="flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">Component Results</h1>
@@ -7,6 +8,7 @@
     <%= link_to "Back", components_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
   </div>
 
+  <%# Pipeline Status Bar %>
   <% if @pipeline_run %>
     <div class="bg-white shadow rounded-lg p-6">
       <div class="flex items-center justify-between mb-4">
@@ -34,52 +36,100 @@
     </div>
   <% end %>
 
+  <%# Code Editor + Live Preview (split-pane) %>
   <% if @components.any? %>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <% @components.each do |component| %>
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="px-6 py-4 bg-gray-50 border-b flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                <%= component.framework == 'vue' ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800' %>">
-                <%= component.framework.capitalize %>
-              </span>
-              <span class="text-sm font-medium text-gray-900"><%= component.filename %></span>
-            </div>
-            <% if component.quality_score %>
-              <span class="text-xs text-gray-500">
-                Score: <strong><%= component.quality_score.overall.round %>%</strong>
-                (<%= component.quality_score.grade %>)
-              </span>
-            <% end %>
-          </div>
+    <%
+      # Build source data hash for the Stimulus controller
+      source_data = {}
+      @components.each do |c|
+        source_data[c.framework] = {
+          source_code: c.source_code,
+          preview_html: c.preview_html,
+          filename: c.filename,
+          quality_score: c.quality_score ? {
+            overall: c.quality_score.overall.round,
+            grade: c.quality_score.grade,
+            accessibility: c.quality_score.accessibility.round,
+            performance: c.quality_score.performance.round,
+            code_quality: c.quality_score.code_quality.round,
+            design_fidelity: c.quality_score.design_fidelity.round
+          } : nil
+        }
+      end
+      frameworks = source_data.keys
+    %>
 
-          <div class="p-4">
-            <pre class="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto text-xs leading-relaxed max-h-96"><code><%= component.source_code %></code></pre>
-          </div>
+    <%# Inject source data as JSON (avoids HTML attribute escaping issues) %>
+    <script type="application/json" id="component-sources"><%= raw source_data.to_json %></script>
 
-          <% if component.quality_score %>
-            <div class="px-6 py-3 bg-gray-50 border-t">
-              <div class="grid grid-cols-4 gap-2 text-center">
-                <div>
-                  <div class="text-xs text-gray-500">A11y</div>
-                  <div class="text-sm font-semibold"><%= component.quality_score.accessibility.round %>%</div>
-                </div>
-                <div>
-                  <div class="text-xs text-gray-500">Perf</div>
-                  <div class="text-sm font-semibold"><%= component.quality_score.performance.round %>%</div>
-                </div>
-                <div>
-                  <div class="text-xs text-gray-500">Quality</div>
-                  <div class="text-sm font-semibold"><%= component.quality_score.code_quality.round %>%</div>
-                </div>
-                <div>
-                  <div class="text-xs text-gray-500">Fidelity</div>
-                  <div class="text-sm font-semibold"><%= component.quality_score.design_fidelity.round %>%</div>
-                </div>
-              </div>
-            </div>
+    <div class="bg-white shadow rounded-lg overflow-hidden"
+         data-controller="code-editor"
+         data-code-editor-active-framework-value="<%= frameworks.first %>">
+
+      <%# Toolbar: tabs + copy %>
+      <div class="px-4 py-2 bg-gray-50 border-b flex items-center justify-between">
+        <div class="flex items-center gap-1">
+          <% frameworks.each do |fw| %>
+            <button type="button"
+                    data-action="click->code-editor#switchTab"
+                    data-framework="<%= fw %>"
+                    data-code-editor-target="<%= fw %>Tab"
+                    class="px-3 py-1.5 text-sm font-medium rounded-t transition-colors
+                      <%= fw == frameworks.first ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500 hover:text-gray-700' %>">
+              <%= fw.capitalize %>
+            </button>
           <% end %>
+        </div>
+        <button type="button"
+                data-action="click->code-editor#copy"
+                data-code-editor-target="copyBtn"
+                class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+          Copy
+        </button>
+      </div>
+
+      <%# Split Pane: Editor | Preview %>
+      <div class="flex flex-col lg:flex-row" style="height: 600px;">
+        <%# Left: Code Editor %>
+        <div class="w-full lg:w-1/2 h-full overflow-hidden border-r border-gray-200"
+             data-code-editor-target="editorContainer">
+          <%# CodeMirror editors injected here by Stimulus %>
+        </div>
+
+        <%# Right: Live Preview %>
+        <div class="w-full lg:w-1/2 h-full bg-white">
+          <iframe data-code-editor-target="preview"
+                  sandbox="allow-scripts"
+                  class="w-full h-full border-0"
+                  title="Component Preview"></iframe>
+        </div>
+      </div>
+
+      <%# Quality Scores %>
+      <% first_component = @components.first %>
+      <% if first_component&.quality_score %>
+        <div class="px-6 py-3 bg-gray-50 border-t">
+          <div class="grid grid-cols-4 gap-4 text-center">
+            <div>
+              <div class="text-xs text-gray-500">A11y</div>
+              <div class="text-sm font-semibold"><%= first_component.quality_score.accessibility.round %>%</div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Perf</div>
+              <div class="text-sm font-semibold"><%= first_component.quality_score.performance.round %>%</div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Quality</div>
+              <div class="text-sm font-semibold"><%= first_component.quality_score.code_quality.round %>%</div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Fidelity</div>
+              <div class="text-sm font-semibold"><%= first_component.quality_score.design_fidelity.round %>%</div>
+            </div>
+          </div>
         </div>
       <% end %>
     </div>

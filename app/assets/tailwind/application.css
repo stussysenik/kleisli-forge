@@ -1,1 +1,4 @@
 @import "tailwindcss";
+
+.cm-editor { height: 100%; }
+.cm-editor .cm-scroller { overflow: auto; }

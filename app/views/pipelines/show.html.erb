@@ -67,9 +67,11 @@
 <% end %>
 
 <script type="module">
-  // SSE connection for real-time updates
+  // SSE connection for real-time updates (only when pipeline is still running)
   const eventsUrl = document.querySelector('meta[name="pipeline-events-url"]')?.content;
-  if (eventsUrl) {
+  const pipelineStatus = "<%= @pipeline_run.status %>";
+
+  if (eventsUrl && pipelineStatus === "running") {
     const eventSource = new EventSource(eventsUrl);
 
     eventSource.addEventListener('progress', (e) => {
@@ -82,7 +84,6 @@
 
     eventSource.addEventListener('pipeline_done', (e) => {
       eventSource.close();
-      // Reload to show final results
       window.location.reload();
     });
 
