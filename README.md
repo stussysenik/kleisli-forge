@@ -1,24 +1,25 @@
-# README
+# kleisli-forge
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+kind of forgot what was the intention
 
-Things you may want to cover:
+![Ruby](https://img.shields.io/badge/Ruby-CC342D?style=flat-square&logo=ruby&logoColor=white)
 
-* Ruby version
+## About
 
-* System dependencies
+📦 **Project** built with Ruby on Rails.
 
-* Configuration
+<!-- 
+  Add a demo GIF here:
+  ![Demo](demo.gif)
+-->
 
-* Database creation
+## Run
 
-* Database initialization
+```bash
+bundle install
+rails server
+```
 
-* How to run the test suite
+---
 
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+*Built by [@stussysenik](https://github.com/stussysenik)*
