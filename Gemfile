@@ -47,7 +47,7 @@ gem "dry-struct", "~> 1.6"
 gem "dry-transformer", "~> 1.0"
 
 # State Machine with audit trail
-gem "statesman", "~> 12.0"
+gem "statesman", "~> 13.1"
 
 # HTTP Client for NIM API
 gem "faraday", "~> 2.9"
